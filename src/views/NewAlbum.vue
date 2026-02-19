@@ -51,14 +51,13 @@
 
           <button
             @click="submit"
-            :disabled="!title || selectedFiles.length === 0 || loading"
+            :disabled="!loading"
             class="w-full py-4 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 disabled:bg-slate-300 disabled:shadow-none transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
-          >
-            <span v-if="!loading">🚀 Create Album</span>
-            <span v-else class="animate-pulse">Creating...</span>
-            <span v-if="loading" class="mr-2">
-              <LoadingSpinner />
+            >
+            <span v-if="!loading">
+              <LoadingSpinner class="mr-2" />
             </span>
+            <span> Create My Album 🚀</span>
           </button>
 
           <div v-if="message" class="p-4 bg-green-50 text-green-700 rounded-lg text-center font-bold border border-green-100">
@@ -95,18 +94,22 @@ function onFilesSelected(files) {
   selectedFiles.value = files;
 }
 
-const { createAlbum, loading, error } = useAlbums();
+const { createAlbum, error } = useAlbums();
 
 const router = useRouter();
+const loading = ref(false);
 
 async function submit() {
+  loading.value = true;
   if (!title.value.trim()) {
     errors.value = ["Album title is required"];
+    loading.value = false;
     return;
   }
 
   if (selectedFiles.value.length === 0) {
     errors.value = ["Please select at least 1 image"];
+    loading.value = false;
     return;
   }
 
@@ -137,7 +140,8 @@ async function submit() {
     description.value = "";
     isPublic.value = true;
     selectedFiles.value = [];
-
+    
+    loading.value = false;
     router.push(`/albums/${albumId}`);
 
   } catch (err) {
