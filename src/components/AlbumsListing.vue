@@ -1,14 +1,27 @@
 <template>
   <div class="min-h-screen bg-light/50 px-6 py-12">
     <div class="max-w-6xl mx-auto">
-      <header class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <header class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
           <h1 class="font-heading text-4xl font-bold text-dark tracking-tight">
             {{ titlePrefix }} <span class="text-primary">Albums</span>
           </h1>
           <p class="text-secondary mt-2 text-lg">{{ subTitle }}</p>
         </div>
-        <div class="h-1 w-20 bg-primary rounded-full hidden md:block mb-3"></div>
+
+        <div class="relative w-full md:w-72 group">
+          <span class="absolute inset-y-0 left-3 flex items-center text-secondary group-focus-within:text-primary transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </span>
+          <input 
+            v-model="searchQuery"
+            type="text" 
+            placeholder="Search albums..." 
+            class="w-full pl-10 pr-4 py-2.5  border-slate-200 rounded-xl outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
+          />
+        </div>
       </header>
 
       <div v-if="loading" class="flex flex-col items-center justify-center py-20">
@@ -17,13 +30,17 @@
       </div>
 
       <div 
-        v-if="albums.length === 0 && !loading" 
+        v-if="filteredAlbums.length === 0 && !loading" 
         class="bg-white rounded-card shadow-card p-12 text-center border border-slate-100"
       >
-        <div class="text-5xl mb-4">📸</div>
-        <h3 class="text-xl font-bold text-dark">You have no albums yet</h3>
-        <p class="text-secondary">Create your first album to share your memories with the world.</p>
-        <div class="flex justify-center mt-4">
+        <div class="text-5xl mb-4">{{ searchQuery ? '🔍' : '📸' }}</div>
+        <h3 class="text-xl font-bold text-dark">
+          {{ searchQuery ? `No matches for "${searchQuery}"` : 'You have no albums yet' }}
+        </h3>
+        <p class="text-secondary">
+          {{ searchQuery ? 'Try a different search term.' : 'Create your first album to share your memories.' }}
+        </p>
+        <div class="flex justify-center mt-4" v-if="!searchQuery">
             <router-link 
                 to="/albums/new" 
                 class="text-sm font-bold text-primary flex items-center gap-2 hover:opacity-80 transition-opacity"
@@ -31,11 +48,12 @@
                 <span class="text-lg">+</span> Create Album
             </router-link>
         </div>
+        <button v-else @click="searchQuery = ''" class="mt-4 text-primary font-bold text-sm">Clear Search</button>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         <article
-          v-for="album in albums"
+          v-for="album in filteredAlbums"
           :key="album.id"
           class="group relative aspect-[4/5] rounded-card overflow-hidden shadow-card transition-all duration-500 hover:shadow-2xl"
         >
@@ -55,7 +73,6 @@
           <div class="absolute inset-0 bg-gradient-to-t from-dark/90 via-dark/10 to-transparent opacity-70 group-hover:opacity-90 transition-opacity duration-300"></div>
 
           <div class="absolute inset-0 flex flex-col justify-end p-5">
-            
             <h2 class="font-heading text-xl text-white mb-2 transition-transform duration-300 group-hover:-translate-y-1 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
               {{ album.title }}
             </h2>
@@ -68,8 +85,6 @@
               <span class="transition-transform group-hover/link:translate-x-1">→</span>
             </router-link>
           </div>
-
-          <div class="absolute inset-0 border border-white/10 pointer-events-none rounded-card"></div>
         </article>
       </div>
     </div>
@@ -77,23 +92,35 @@
 </template>
 
 <script setup>
+import { ref, computed } from 'vue';
 
-defineProps({
-  titlePrefix: {
-    type: String,
-    required: true
+const props = defineProps({
+  titlePrefix: { 
+    type: String, 
+    required: true 
   },
-  subTitle: {
-    type: String,
-    required: true
+  subTitle: { 
+    type: String, 
+    required: true 
   },
-  albums: {
-    type: Array,
-    required: true
+  albums: { 
+    type: Array, 
+    required: true 
   },
-  loading: {
-    type: Boolean,
-    default: false
+  loading: { 
+    type: Boolean, 
+    default: false 
   }
+});
+
+const searchQuery = ref("");
+
+const filteredAlbums = computed(() => {
+  if (!searchQuery.value) return props.albums;
+  
+  const query = searchQuery.value.toLowerCase();
+  return props.albums.filter(album => 
+    album.title.toLowerCase().includes(query)
+  );
 });
 </script>
