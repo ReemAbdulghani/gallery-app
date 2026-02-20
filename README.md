@@ -10,6 +10,7 @@ You can log in using this seeded user account:
 ## Tech choice
 Firebase is chosen over supabase because of the Storage service which is more reliable, fast solution for handling user-uploaded images—perfect for a gallery app that depends on smooth uploads and secure file access.
 
+Beside firebase, I used Vue with js and tailwind 
 ## Project Setup
 
 Clone the repository:
