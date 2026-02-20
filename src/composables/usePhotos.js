@@ -7,7 +7,7 @@ export function usePhotos(albumId) {
   const errors = ref([]);
   const uploadedUrls = ref([]);
 
-  const uploadPhotos = async (files) => {
+  const uploadPhotos = async (files, ownerId, isPublic) => {
     errors.value = [];
     uploadedUrls.value = [];
 
@@ -16,8 +16,14 @@ export function usePhotos(albumId) {
         const path = `albums/${albumId}/${file.name}`;
         const sRef = storageRef(storage, path);
 
-        // Upload file
-        await uploadBytes(sRef, file);
+         // Upload file
+        const metadata = {
+          customMetadata: {
+            'ownerId': ownerId,
+            'isPublic': isPublic.toString() // Metadata values must be strings
+          }
+        };
+        await uploadBytes(sRef, file, metadata);
 
         // Get download URL
         const url = await getDownloadURL(sRef);

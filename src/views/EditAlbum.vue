@@ -219,9 +219,9 @@ async function removeExisting() {
   await photosComposable.deletePhoto(photoToDelete.value);
   existingPhotos.value = existingPhotos.value.filter(p => p.path !== photoToDelete.value.path);
 }
+
 const localLoading = ref(false);
 async function save() {
-  console.log('clicked')
   //if (uploaderErrors.value.length) return;
   localLoading.value = true;
   await updateAlbum(albumId, {
@@ -232,7 +232,7 @@ async function save() {
 
   // upload new images
   if (newFiles.value.length) {
-    await photosComposable.uploadPhotos(newFiles.value);
+    await photosComposable.uploadPhotos(newFiles.value, user.value.uid, isPublic.value);
 
     // Update local previews
     existingPhotos.value.push(...photosComposable.uploadedUrls.value);

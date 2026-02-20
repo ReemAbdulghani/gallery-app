@@ -125,7 +125,7 @@ async function submit() {
 
     // Step 2 — upload photos
     const photos = usePhotos(albumId);
-    await photos.uploadPhotos(selectedFiles.value);
+    await photos.uploadPhotos(selectedFiles.value, user.value?.uid, isPublic.value);
 
     uploaded.value = photos.uploadedUrls.value;
     errors.value = photos.errors.value;
