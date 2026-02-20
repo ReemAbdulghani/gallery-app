@@ -60,6 +60,7 @@ VITE_FIREBASE_APP_ID=your_app_id
 4- Deploy the project – Vercel will handle build and hosting automatically.
 
 ## Schema 
+```text
 /users
   └─ {userId}
        ├─ name: string
@@ -76,7 +77,7 @@ VITE_FIREBASE_APP_ID=your_app_id
        │     ├─ path: string
        │     └─ url: string
        └─ createdAt: timestamp
-
+```
 
 ## Security Rules
 ```javascript
