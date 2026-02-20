@@ -51,10 +51,10 @@
 
           <button
             @click="submit"
-            :disabled="!loading"
+            :disabled="loading"
             class="w-full py-4 bg-primary text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 disabled:bg-slate-300 disabled:shadow-none transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
             >
-            <span v-if="!loading">
+            <span v-if="loading">
               <LoadingSpinner class="mr-2" />
             </span>
             <span> Create My Album 🚀</span>
