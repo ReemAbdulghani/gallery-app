@@ -12,7 +12,7 @@
 
       <div class="bg-white rounded-card shadow-card border border-slate-100 overflow-hidden">
         <div class="p-8 space-y-6">
-          
+          <ErrorMsg :error="error"/>
           <div class="group">
             <label class="block text-xs font-black text-secondary uppercase tracking-[0.2em] mb-2 group-focus-within:text-primary transition-colors">
               Email Address
@@ -44,10 +44,15 @@
             @click="submit"
             class="w-full bg-primary text-white py-4 rounded-xl font-bold shadow-xl shadow-primary/20 hover:bg-blue-600 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
           >
-            <span>Sign In to Studio</span>
+          <span>Sign In to Studio</span>
+          <span v-if="loading" class="mr-2">
+            <LoadingSpinner />
+          </span>
+          <span v-else>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
+          </span>
           </button>
         </div>
 
@@ -65,9 +70,11 @@
 import { ref } from "vue";
 import { useAuth } from "@/composables/useAuth";
 import { useRouter } from "vue-router";
+import LoadingSpinner from "@/components/LoadingSpinner.vue";
+import ErrorMsg from "@/components/ErrorMsg.vue";
 
 const router = useRouter();
-const { login, error, user, loading } = useAuth();
+const { login, error, loading } = useAuth();
 
 const email = ref("");
 const password = ref("");

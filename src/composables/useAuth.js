@@ -6,6 +6,7 @@ import {
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
+import { mapFirebaseError } from '../firebaseErrors';
 
 const user = ref(null);
 const iniLoading = ref(true);
@@ -27,7 +28,7 @@ export function useAuth() {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
     } catch (err) {
-      error.value = err.message;
+      error.value = mapFirebaseError(err);
     } finally {
       loading.value = false;
     }
@@ -39,7 +40,7 @@ export function useAuth() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err) {
-      error.value = err.message;
+      error.value = mapFirebaseError(err);
     } finally {
       loading.value = false;
     }

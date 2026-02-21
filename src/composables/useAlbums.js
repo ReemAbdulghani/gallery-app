@@ -8,8 +8,9 @@ import {
   query,
   where,
   getDoc,
-  getDocs
+  getDocs,
 } from "firebase/firestore";
+import { mapFirebaseError } from "@/firebaseErrors";
 
 export function useAlbums() {
   const error = ref();
@@ -25,7 +26,7 @@ export function useAlbums() {
     
         return albumSnap.exists() ? albumSnap.data() : null;
     } catch (e) {
-        error.value = e.message;    
+        error.value = mapFirebaseError(e); 
     } finally {
         loading.value = false;  
     }   
@@ -45,7 +46,7 @@ export function useAlbums() {
         ...d.data(),
       }));
     } catch (e) {
-      error.value = e.message;    
+      error.value = mapFirebaseError(e);   
     } finally {
       loading.value = false;
     }
@@ -67,7 +68,7 @@ export function useAlbums() {
       return albumsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
     } catch (e) {
-      error.value = e.message;
+      error.value = mapFirebaseError(e); 
     } finally {
       loading.value = false;
     }
@@ -88,7 +89,7 @@ export function useAlbums() {
         console.log("Album created", albumRef);
         return albumRef.id;
     } catch (e) {
-        error.value = e.message;    
+        error.value = mapFirebaseError(e);  
     } finally {
         loading.value = false;  
     } 
@@ -101,7 +102,7 @@ export function useAlbums() {
     try {
         await updateDoc(doc(db, "albums", id), data);
     } catch (e) {
-        error.value = e.message;    
+        error.value = mapFirebaseError(e);   
     }   finally { 
         loading.value = false;
     }

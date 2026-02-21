@@ -21,6 +21,7 @@
               placeholder="e.g. Summer Vacation 2026"
               class="w-full px-4 py-3 rounded-lg border border-secondary/20 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
             />
+            <span class="text-red-500 text-sm">{{ validationErrors.title }}</span>
           </div>
 
           <div>
@@ -47,6 +48,7 @@
           <div>
             <label class="block text-sm font-bold text-dark mb-3">Upload Photos</label>
             <MultiImagesUploader @files-selected="onFilesSelected" />
+            <span class="text-red-500 text-sm">{{ validationErrors.files }}</span>
           </div>
 
           <button
@@ -59,13 +61,7 @@
             </span>
             <span> Create My Album 🚀</span>
           </button>
-
-          <div v-if="message" class="p-4 bg-green-50 text-green-700 rounded-lg text-center font-bold border border-green-100">
-            {{ message }}
-          </div>
-          <div v-if="errors.length > 0 && !message" class="p-4 bg-red-50 text-red-700 rounded-lg text-sm border border-red-100">
-            <li v-for="err in errors" :key="err">{{ err }}</li>
-          </div>
+          <ErrorMsg :error="serverError" class="mt-4"/>
         </div>
       </div>
     </div>
@@ -76,39 +72,50 @@ import { ref } from "vue";
 import { useAlbums } from "@/composables/useAlbums";
 import { usePhotos } from "@/composables/usePhotos";
 import MultiImagesUploader from "@/components/MultiImagesUploader.vue";
+import { mapFirebaseError } from "@/firebaseErrors";
 import { useRouter } from "vue-router";
 import { useAuth } from "@/composables/useAuth";
 import LoadingSpinner from "@/components/LoadingSpinner.vue";
+import ErrorMsg from "@/components/ErrorMsg.vue";
+
 
 const { user } = useAuth();
+const router = useRouter();
 
 const title = ref("");
 const description = ref("");
 const isPublic = ref(true);
 const selectedFiles = ref([]);
-const errors = ref([]);
-const uploaded = ref([]);
-const message = ref("");
+const loading = ref(false);
+
 
 function onFilesSelected(files) {
   selectedFiles.value = files;
 }
 
-const { createAlbum, error } = useAlbums();
+const { createAlbum, error: albumError } = useAlbums();
 
-const router = useRouter();
-const loading = ref(false);
+
+const serverError = ref("");
+const validationErrors = ref({});
+const validateForm = () => {
+  const errors = {};
+  if (!title.value.trim()) {
+    errors.title = "Album title is required";
+  }
+  if (selectedFiles.value.length === 0) {
+    errors.files = "Please select at least 1 image";
+  }
+  validationErrors.value = errors;
+  return Object.keys(errors).length === 0;
+};
 
 async function submit() {
   loading.value = true;
-  if (!title.value.trim()) {
-    errors.value = ["Album title is required"];
-    loading.value = false;
-    return;
-  }
-
-  if (selectedFiles.value.length === 0) {
-    errors.value = ["Please select at least 1 image"];
+  serverError.value = "";
+  
+  const isValid = validateForm();
+  if (!isValid) {
     loading.value = false;
     return;
   }
@@ -122,19 +129,21 @@ async function submit() {
       photos: [],
       ownerId: user.value?.uid || null
     });
+    if (!albumId) {
+      serverError.value = albumError.value || "Failed to create album. Please try again.";
+      loading.value = false;
+      return;
+    }
 
     // Step 2 — upload photos
     const photos = usePhotos(albumId);
     await photos.uploadPhotos(selectedFiles.value, user.value?.uid, isPublic.value);
 
-    uploaded.value = photos.uploadedUrls.value;
-    errors.value = photos.errors.value;
-
-    // Final message
-    message.value = errors.value.length
-      ? "Album created, but some images failed."
-      : "Album created successfully!";
-
+    
+    if (photos.error.value) {
+      serverError.value = 'Album was created but failed to upload some photos: \n' + photos.error.value;
+    }
+    
     // Reset
     title.value = "";
     description.value = "";
@@ -145,7 +154,8 @@ async function submit() {
     router.push(`/albums/${albumId}`);
 
   } catch (err) {
-    errors.value = ["Failed to create album: " + err.message];
+    serverError.value = mapFirebaseError(err);
+    loading.value = false;
   }
 }
 </script>

@@ -2,15 +2,17 @@ import { ref } from "vue";
 import { storage, db } from "@/firebase";
 import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { doc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { mapFirebaseError } from "@/firebaseErrors";
 
 export function usePhotos(albumId) {
-  const errors = ref([]);
+  const error = ref();
   const uploadedUrls = ref([]);
 
   const uploadPhotos = async (files, ownerId, isPublic) => {
-    errors.value = [];
+    error.value = null;
     uploadedUrls.value = [];
-
+    
+    const photosErrors = ref([]);
     for (let file of files) {
       try {
         const path = `albums/${albumId}/${file.name}`;
@@ -39,8 +41,11 @@ export function usePhotos(albumId) {
         });
 
       } catch (e) {
-        errors.value.push(`${file.name} failed: ${e.message}`);
+        photosErrors.value.push(`${file.name} failed: ${mapFirebaseError(e)}`);
       }
+    }
+    if (photosErrors.value.length) {
+      error.value = photosErrors.value.join("\n ");
     }
   };
 
@@ -54,9 +59,9 @@ export function usePhotos(albumId) {
         photos: arrayRemove(photo)
       });
     } catch (e) {
-      console.error("Delete failed:", e);
+      console.error("Delete failed:", mapFirebaseError(e));
     }
   };
 
-  return { errors, uploadedUrls, uploadPhotos, deletePhoto };
+  return { error, uploadedUrls, uploadPhotos, deletePhoto };
 }

@@ -9,9 +9,7 @@
 
       <div class="bg-white rounded-card shadow-card border border-slate-100 overflow-hidden">
         <div class="p-8 space-y-5">
-          <div v-if="error" class="mt-4 text-red-600 text-center font-semibold">
-          {{ error }}
-        </div>
+          <ErrorMsg :error="error"/>
           <div class="group">
             <label class="block text-xs font-black text-secondary uppercase tracking-[0.2em] mb-2 group-focus-within:text-primary transition-colors">
               Full Name
@@ -64,10 +62,10 @@
             :disabled="loading"
             class="w-full bg-primary text-white py-4 rounded-xl font-bold shadow-xl shadow-primary/20 hover:bg-blue-600 transition-all transform active:scale-[0.98] flex items-center justify-center"
           >
-            <span v-if="loading" class="mr-2">
-                <LoadingSpinner />
-            </span>
-            <span>Create My Studio</span>
+          <span>Create My Studio</span>
+          <span v-if="loading" class="mr-2">
+              <LoadingSpinner />
+          </span>
           </button>
         </div>
 
@@ -87,6 +85,7 @@ import { ref } from "vue";
 import { useAuth } from "@/composables/useAuth";
 import { useRouter } from "vue-router";
 import LoadingSpinner from "@/components/LoadingSpinner.vue";
+import ErrorMsg from "@/components/ErrorMsg.vue";
 
 const router = useRouter();
 const { signup, error, loading } = useAuth();
