@@ -59,7 +59,7 @@ export function usePhotos(albumId) {
         photos: arrayRemove(photo)
       });
     } catch (e) {
-      console.error("Delete failed:", mapFirebaseError(e));
+      error.value = `Delete failed: ${mapFirebaseError(e)}`;
     }
   };
 

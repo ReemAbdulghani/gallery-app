@@ -96,7 +96,8 @@
                   class="absolute -top-2 -right-2 bg-red-500 text-white w-7 h-7 rounded-full shadow-lg flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-all hover:scale-110 z-10"
                   title="Remove photo"
                 >
-                  ✕
+                  <LoadingSpinner v-if="deletingPhotoPath === img.path" class="w-4 h-4 text-white"/>
+                  <span v-else class="text-white">✕</span>
                 </button>
                 <Transition name="fade">
                     <div v-if="showDeleteModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -140,6 +141,7 @@
         </section>
 
         <div class="sticky bottom-8 z-20">
+          <ErrorMsg :error="serverError" class="mb-4"/>
           <button
             @click="save"
             :disabled="localLoading"
@@ -165,21 +167,22 @@ import { usePhotos } from "@/composables/usePhotos";
 import { useAuth } from "@/composables/useAuth";
 import { useRouter } from "vue-router";
 import LoadingSpinner from "@/components/LoadingSpinner.vue";
+import ErrorMsg from "@/components/ErrorMsg.vue";
+
 const { user } = useAuth();
 const router = useRouter();
 const route = useRoute();
 const albumId = route.params.id;
 
-const { getAlbum, updateAlbum, loading} = useAlbums();
-const photosComposable = usePhotos(albumId);
+const { getAlbum, updateAlbum, error: albumError, loading} = useAlbums();
+const photos = usePhotos(albumId);
 
 const title = ref("");
 const description = ref("");
 const isPublic = ref(true);
 const existingPhotos = ref([]);
 const newFiles = ref([]);
-//const uploaderErrors = ref([]);
-const message = ref("");
+const serverError = ref("");
 const ownershipVerified = ref(false);
 onMounted(async () => {
   ownershipVerified.value = false;
@@ -196,33 +199,35 @@ onMounted(async () => {
     isPublic.value = album.isPublic;
     existingPhotos.value = album.photos || [];
   }
-
 });
 
 function onFilesSelected(files) {
   newFiles.value = files;
 }
-/*
-function onUploaderErrors(errs) {
-  uploaderErrors.value = errs;
-}
-*/
+
 // Delete existing image
 const showDeleteModal = ref(false);
 const photoToDelete = ref(null);
+const deletingPhotoPath = ref(null);
 function confirmDelete(photo) {
   showDeleteModal.value = true;
   photoToDelete.value = photo;
 }
 async function removeExisting() {
   if (!photoToDelete.value) return;
-  await photosComposable.deletePhoto(photoToDelete.value);
-  existingPhotos.value = existingPhotos.value.filter(p => p.path !== photoToDelete.value.path);
+  deletingPhotoPath.value = photoToDelete.value.path;
+  await photos.deletePhoto(photoToDelete.value);
+
+  if (photos.error.value) {
+    serverError.value = photos.error.value;
+  } else {
+    existingPhotos.value = existingPhotos.value.filter(p => p.path !== photoToDelete.value.path);
+  }
+  deletingPhotoPath.value = null;
 }
 
 const localLoading = ref(false);
 async function save() {
-  //if (uploaderErrors.value.length) return;
   localLoading.value = true;
   await updateAlbum(albumId, {
     title: title.value,
@@ -230,15 +235,23 @@ async function save() {
     isPublic: isPublic.value,
   });
 
+  if (albumError.value) {
+    serverError.value = albumError.value || "Failed to update album. Please try again.";
+    localLoading.value = false;
+    return;
+  }
   // upload new images
   if (newFiles.value.length) {
-    await photosComposable.uploadPhotos(newFiles.value, user.value.uid, isPublic.value);
+    await photos.uploadPhotos(newFiles.value, user.value.uid, isPublic.value);
 
-    // Update local previews
-    existingPhotos.value.push(...photosComposable.uploadedUrls.value);
+    if (photos.error.value) {
+      serverError.value = 'Album was created but failed to upload some photos: \n' + photos.error.value;
+    } else {
+      // Update local previews
+      existingPhotos.value.push(...photos.uploadedUrls.value);
+    }
   }
   localLoading.value = false;
   router.push(`/albums/${albumId}`);
-  message.value = "Album updated successfully!";
 }
 </script>
