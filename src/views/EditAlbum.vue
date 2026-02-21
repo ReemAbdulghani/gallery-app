@@ -93,7 +93,7 @@
                 
                 <button
                   @click="confirmDelete(img)"
-                  class="absolute -top-2 -right-2 bg-red-500 text-white w-7 h-7 rounded-full shadow-lg flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-all hover:scale-110 z-10"
+                  class="absolute -top-2 -right-2 bg-red-500 text-white w-7 h-7 rounded-full shadow-lg flex items-center justify-center text-xs transition-all hover:scale-110 z-10"
                   title="Remove photo"
                 >
                   <LoadingSpinner v-if="deletingPhotoPath === img.path" class="w-4 h-4 text-white"/>
